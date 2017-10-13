@@ -1,56 +1,4 @@
 
-%% bare_conf.tex
-%% V1.4b
-%% 2015/08/26
-%% by Michael Shell
-%% See:
-%% http://www.michaelshell.org/
-%% for current contact information.
-%%
-%% This is a skeleton file demonstrating the use of IEEEtran.cls
-%% (requires IEEEtran.cls version 1.8b or later) with an IEEE
-%% conference paper.
-%%
-%% Support sites:
-%% http://www.michaelshell.org/tex/ieeetran/
-%% http://www.ctan.org/pkg/ieeetran
-%% and
-%% http://www.ieee.org/
-
-%%*************************************************************************
-%% Legal Notice:
-%% This code is offered as-is without any warranty either expressed or
-%% implied; without even the implied warranty of MERCHANTABILITY or
-%% FITNESS FOR A PARTICULAR PURPOSE! 
-%% User assumes all risk.
-%% In no event shall the IEEE or any contributor to this code be liable for
-%% any damages or losses, including, but not limited to, incidental,
-%% consequential, or any other damages, resulting from the use or misuse
-%% of any information contained here.
-%%
-%% All comments are the opinions of their respective authors and are not
-%% necessarily endorsed by the IEEE.
-%%
-%% This work is distributed under the LaTeX Project Public License (LPPL)
-%% ( http://www.latex-project.org/ ) version 1.3, and may be freely used,
-%% distributed and modified. A copy of the LPPL, version 1.3, is included
-%% in the base LaTeX documentation of all distributions of LaTeX released
-%% 2003/12/01 or later.
-%% Retain all contribution notices and credits.
-%% ** Modified files should be clearly indicated as such, including  **
-%% ** renaming them and changing author support contact information. **
-%%*************************************************************************
-
-
-% *** Authors should verify (and, if needed, correct) their LaTeX system  ***
-% *** with the testflow diagnostic prior to trusting their LaTeX platform ***
-% *** with production work. The IEEE's font choices and paper sizes can   ***
-% *** trigger bugs that do not appear when using other class files.       ***                          ***
-% The testflow support page is at:
-% http://www.michaelshell.org/tex/testflow/
-
-
-
 \documentclass[conference]{IEEEtran}
 \usepackage{mathtools}
 \usepackage{amsmath}
@@ -74,28 +22,20 @@
 % not capitalized unless they are the first or last word of the title.
 % Linebreaks \\ can be used within to get better formatting as desired.
 % Do not put math or special symbols in the title.
-\title{Bare Demo of IEEEtran.cls\\ for IEEE Conferences}
+\title{Coarse Geo-Registration Over A Large Area}
 
 
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
-\author{\IEEEauthorblockN{Michael Shell}
-\IEEEauthorblockA{School of Electrical and\\Computer Engineering\\
-Georgia Institute of Technology\\
-Atlanta, Georgia 30332--0250\\
-Email: http://www.michaelshell.org/contact.html}
-\and
-\IEEEauthorblockN{Homer Simpson}
-\IEEEauthorblockA{Twentieth Century Fox\\
-Springfield, USA\\
-Email: homer@thesimpsons.com}
-\and
-\IEEEauthorblockN{James Kirk\\ and Montgomery Scott}
-\IEEEauthorblockA{Starfleet Academy\\
-San Francisco, California 96678--2391\\
-Telephone: (800) 555--1212\\
-Fax: (888) 555--1212}}
+
+\author{\IEEEauthorblockN{Sean Lantto}
+\IEEEauthorblockA{Mechanical and Aerospace Engineering Department\\
+	Statler College of Engineering and Mineral Resources\\
+	West Virginia University\\
+	Morgantown, West Virginia 26505\\
+Email: slantto@mix.wvu.edu}}
+%\and
 
 % conference papers do not typically use \thanks and this command
 % is locked out in conference mode. If really needed, such as for
@@ -134,7 +74,7 @@ Fax: (888) 555--1212}}
 % As a general rule, do not put math, special symbols or citations
 % in the abstract
 \begin{abstract}
-The abstract goes here.
+An aerial pla
 \end{abstract}
 
 % no keywords
@@ -155,127 +95,39 @@ The abstract goes here.
 
 
 \section{Introduction}
-% no \IEEEPARstart
-This demo file is intended to serve as a ``starter file''
-for IEEE conference papers produced under \LaTeX\ using
-IEEEtran.cls version 1.8b and later.
-% You must have at least 2 lines in the paragraph with the drop letter
-% (should never be an issue)
-I wish you the best of success.
+Many aircraft use a coupled inertial navigation and GNSS system to provide a attitude, position, and velocity estimates.The measurements from the inertial navigation system (INS) suffer from an unbounded error, that accumulates over time. This "drift" is corrected using measurements from the GNSS, integrated through a  Bayesian estimator such as a Kalman filter. An aircraft that has been denied GNSS positioning for an extend period will suffer from a very large error in its position, due to the INS drift. This large error means the aircraft may only know that it is within a large geographical region. A large geographical region is defined as ~60 x 60 kilometer area for this paper. Cameras on board the aircraft provide a method to localize the aircraft and correct for INS drift.\\ %TODO: false positives, converge in local area only
+This work presents a georegistration based approach to localize an aircraft within a large geographic region using a particle filter. The particle filter is chosen to reduce the impact of false positive feature matches. Methods from [dons paper] are used for the creation of a database of georegistered features, as well as for matching features between the query image and the database. The particle filter uses the output from the feature matching to estimate the position of the aircraft as well as the field of view of the camera that produced the query image.
 
-\hfill mds
- 
-\hfill August 26, 2015
+\section{Database creation}
+%TODO: Search area is Dugway Proving Grounds, features converted from LLA position to NED, using one corner of search area as the origin
+%TODO Need more detail on database creation
+%TODO: include breif overview of SIFT, or reference to some one else
+Scale invariant feature transform (SIFT) features are found on a satellite image of a geographic region. Each one of these SIFT features are given a descriptor (scale, size, magnitude, response, etc); as well as a WGS-84 location. The database features are sorted by the SIFT feature response value.
 
-\subsection{Subsection Heading Here}
-Subsection text here.
+\section{Feature matching}
+%TODO: Inculde description of FLANN?
+%TODO: Include equations for weight calculation
+SIFT features are generated for each image taken by the aircraft, and are sorted by response, just as the database features were. A Fast lookup for Approximation of Nearest Neighbor (FLANN) based matching algorithm is used to compare each SIFT feature generated in the query image to every feature in the database. This returns a list of the nearest neighbors, or the database features closest in appearance to the the query image feature being compared against. Using the L2 norm of the difference between the query image feature and the two nearest database features gives a distance between each neighbor. Taking the complement of the ratio of these distances, creates a weight that is assigned to the database feature that is the closest in appearance to the query image feature. These weighted georegistered database features are saved as a numpy array for use as the observation in the measurement model of the particle filter.
 
+\section{Particle Filter}
+The particle filter initializes with a uniform particle distribution over the entire geographic region. Each particle has a center location and a radius, which corresponds to the location and field of view respectively. Each particle is propagated between images using the measurements from the aircraft's INS. The estimated position is a weighted average of the particle centers. Weighting of the particles is discussed the measurement model section below.
 
-\subsubsection{Subsubsection Heading Here}
-Subsubsection text here.
-
-
-% An example of a floating figure using the graphicx package.
-% Note that \label must occur AFTER (or within) \caption.
-% For figures, \caption should occur after the \includegraphics.
-% Note that IEEEtran v1.7 and later has special internal code that
-% is designed to preserve the operation of \label within \caption
-% even when the captionsoff option is in effect. However, because
-% of issues like this, it may be the safest practice to put all your
-% \label just after \caption rather than within \caption{}.
-%
-% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
-% option should be used if it is desired that the figures are to be
-% displayed while in draft mode.
-%
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure}
-
-% Note that the IEEE typically puts floats only at the top, even when this
-% results in a large percentage of a column being occupied by floats.
+\subsection{Measurement Model}
 
 
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command,
-% and the \label for the overall figure must come after \caption.
-% \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a 
-% line do not exceed the text width or a line break will occur.
-%
-%\begin{figure*}[!t]
-%\centering
-%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure*}
-%
-% Note that often IEEE papers with subfigures do not employ subfigure
-% captions (using the optional argument to \subfloat[]), but instead will
-% reference/describe all of them (a), (b), etc., within the main caption.
-% Be aware that for subfig.sty to generate the (a), (b), etc., subfigure
-% labels, the optional argument to \subfloat must be present. If a
-% subcaption is not desired, just leave its contents blank,
-% e.g., \subfloat[].
+\subsection{Resampling and Particle Redistribution}
 
+\section{Feel the need to put something here}
 
-% An example of a floating table. Note that, for IEEE style tables, the
-% \caption command should come BEFORE the table and, given that table
-% captions serve much like titles, are usually capitalized except for words
-% such as a, an, and, as, at, but, by, for, in, nor, of, on, or, the, to
-% and up, which are usually not capitalized unless they are the first or
-% last word of the caption. Table text will default to \footnotesize as
-% the IEEE normally uses this smaller font for tables.
-% The \label must come after \caption as always.
-%
-%\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-%\renewcommand{\arraystretch}{1.3}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-%\caption{An Example of a Table}
-%\label{table_example}
-%\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-%\begin{tabular}{|c||c|}
-%\hline
-%One & Two\\
-%\hline
-%Three & Four\\
-%\hline
-%\end{tabular}
-%\end{table}
+\section{Results}
 
-
-% Note that the IEEE does not put floats in the very first column
-% - or typically anywhere on the first page for that matter. Also,
-% in-text middle ("here") positioning is typically not used, but it
-% is allowed and encouraged for Computer Society conferences (but
-% not Computer Society journals). Most IEEE journals/conferences use
-% top floats exclusively. 
-% Note that, LaTeX2e, unlike IEEE journals/conferences, places
-% footnotes above bottom floats. This can be corrected via the
-% \fnbelowfloat command of the stfloats package.
-
-
-
-
-\section{Conclusion}
+\section{Conclusion and Future Work}
 The conclusion goes here.
 
 
+Can also be applied to full motion video data, that has unreliable metadata.
+
+%TODO:Future Work: Increase number of states (vel, heading, etc), feature matching on the fly(only search area defined by particles for feature matches), robustize filter, other work
 
 
 % conference papers do not normally have an appendix
@@ -313,13 +165,10 @@ The authors would like to thank...
 % <OR> manually copy in the resultant .bbl file
 % set second argument of \begin to the number of references
 % (used to reserve space for the reference number labels box)
-\begin{thebibliography}{1}
 
-\bibitem{IEEEhowto:kopka}
-H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
-
-\end{thebibliography}
+\bibliographystyle{IEEEtran}
+\bibliography{PF_bibtex_database}
+%\bibliographystyle{aiaa}
 
 
 
